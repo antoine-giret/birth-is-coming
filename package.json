@@ -14,9 +14,11 @@
   "dependencies": {
     "@headlessui/react": "2.2.0",
     "@heroicons/react": "2.2.0",
+    "firebase": "11.0.2",
+    "next": "15.0.4",
     "react": "19.0.0",
     "react-dom": "19.0.0",
-    "next": "15.0.4"
+    "react-toastify": "10.0.6"
   },
   "devDependencies": {
     "@antoine-giret/commitlint-config": "0.0.2",
