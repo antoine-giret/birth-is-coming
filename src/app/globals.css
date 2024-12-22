@@ -18,20 +18,15 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 50px;
-  height: 50px;
   transform: translate(-50%, -50%);
 }
 
 .loader .circular {
   position: relative;
-  width: 50px;
-  height: 50px;
   animation: rotate 2s linear infinite;
 }
 
 .loader .circular .path {
-  stroke: #6366f1;
   stroke-dasharray: 1,200;
   stroke-dashoffset: 0;
   stroke-linecap: round;

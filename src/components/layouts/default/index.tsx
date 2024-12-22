@@ -30,7 +30,7 @@ export default function DefaultLayout({
       <main className="flex flex-col grow">
         <div
           className={[
-            'flex flex-col grow mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8',
+            'flex flex-col grow gap-6 lg:gap-9 mx-auto w-full max-w-7xl px-3 py-6 sm:py-9 lg:py-12 sm:px-6 lg:px-9',
             justifyCenter ? 'md:justify-center' : '',
           ].join(' ')}
         >

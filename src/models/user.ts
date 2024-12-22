@@ -1,7 +1,6 @@
 type TUser = {
+  email: string;
   firstName: string | undefined;
-  joinedBets: [] | undefined;
-  pendingInvitations: [] | undefined;
   pseudo: string | undefined;
 };
 

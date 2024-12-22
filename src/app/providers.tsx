@@ -1,13 +1,18 @@
 'use client';
 
 import { FirebaseOptions, initializeApp } from 'firebase/app';
-import { User, getAuth } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import AppContext from './context';
+
+import useBets from '@/hooks/bets';
+import useUsers from '@/hooks/users';
+import TBet from '@/models/bet';
+import TUser from '@/models/user';
 
 const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.FIREBASE_API_KEY,
@@ -29,23 +34,10 @@ export function Providers({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [initialized] = useState(true);
-  const [currentUser, setCurrentUser] = useState<User | null | undefined>();
+  const [currentUser, setCurrentUser] = useState<TUser | null | undefined>();
+  const [joinedBets, setJoinedBets] = useState<TBet[] | undefined>();
+  const [pendingInvitations, setPendingInvitations] = useState<TBet[] | undefined>();
   const requestedPath = useRef(null);
-
-  useEffect(() => {
-    getCurrentUser();
-  }, [initialized]);
-
-  async function getCurrentUser() {
-    try {
-      await auth.authStateReady();
-      setCurrentUser(auth.currentUser);
-    } catch (err) {
-      console.error(err);
-      setCurrentUser(null);
-    }
-  }
 
   return (
     <AppContext.Provider
@@ -53,12 +45,54 @@ export function Providers({
         auth,
         db,
         navigation: { requestedPath },
-        user: { current: currentUser },
+        user: { current: currentUser, joinedBets, pendingInvitations },
         setCurrentUser,
+        setJoinedBets,
+        setPendingInvitations,
       }}
     >
+      <App>{children}</App>
+    </AppContext.Provider>
+  );
+}
+
+function App({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const { setCurrentUser, setJoinedBets, setPendingInvitations } = useContext(AppContext);
+  const [initialized] = useState(true);
+  const { getCurrentUser: _getCurrentUser } = useUsers();
+  const { getBets } = useBets();
+
+  useEffect(() => {
+    if (initialized) getCurrentUser();
+  }, [initialized]);
+
+  async function getCurrentUser() {
+    try {
+      const user = await _getCurrentUser();
+      setCurrentUser(user);
+      if (user) {
+        const [pendingInvitations, joinedBets] = await Promise.all([
+          getBets({ user, status: 'pending' }),
+          getBets({ user, status: 'accepted' }),
+        ]);
+
+        setJoinedBets(joinedBets);
+        setPendingInvitations(pendingInvitations);
+      }
+    } catch (err) {
+      console.error(err);
+      setCurrentUser(null);
+    }
+  }
+
+  return (
+    <>
       {children}
       <ToastContainer closeButton={false} position="bottom-center" style={{ width: 500 }} />
-    </AppContext.Provider>
+    </>
   );
 }

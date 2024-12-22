@@ -57,6 +57,7 @@ export default function SignInPage() {
             <div>
               <Button
                 fullWidth
+                color="primary"
                 disabled={!auth || !db || !email || !isEmail(email) || !password || isSubmitting}
                 label="Se connecter"
                 onClick={() => signInWithEmail(email, password)}

@@ -32,6 +32,7 @@ export default function ForgotPasswordInPage() {
           </Fieldset>
           <div>
             <Button
+              color="primary"
               fullWidth
               disabled={!auth || !email || !isEmail(email) || isSubmitting}
               label="Envoyer un e-mail de réinitialisation"

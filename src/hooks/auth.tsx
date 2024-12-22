@@ -7,22 +7,25 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
 } from 'firebase/auth';
-import { DocumentReference, doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useContext, useState } from 'react';
 import { toast } from 'react-toastify';
 
+import useBets from './bets';
+import useUsers from './users';
+
 import AppContext from '@/app/context';
 import Button from '@/components/button';
-import TUser from '@/models/user';
 
 const googleAuthProvider = new GoogleAuthProvider();
 googleAuthProvider.addScope('');
 
 export default function useAuth() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { auth, db, setCurrentUser } = useContext(AppContext);
+  const { auth, db, setCurrentUser, setJoinedBets, setPendingInvitations } = useContext(AppContext);
   const router = useRouter();
+  const { createOrUpdateUserDoc } = useUsers();
+  const { getBets } = useBets();
 
   function isEmail(email: string) {
     return String(email)
@@ -30,37 +33,6 @@ export default function useAuth() {
       .match(
         /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
       );
-  }
-
-  async function createOrUpdateUserDoc(email: string, firstName?: string) {
-    if (!db) throw new Error('db is undefined');
-
-    const userDocRef = doc(db, 'users', email) as DocumentReference<TUser, TUser>;
-    const userDocSnap = await getDoc(userDocRef);
-    if (!userDocSnap.exists()) {
-      await setDoc(doc(db, 'users', email), {
-        firstName,
-        pseudo: firstName,
-        joinedBets: [],
-        pendingInvitations: [],
-      });
-    } else {
-      const data = userDocSnap.data();
-      if (
-        (firstName !== undefined && !data.firstName) ||
-        (firstName !== undefined && !data.pseudo) ||
-        !data.joinedBets ||
-        !data.pendingInvitations
-      ) {
-        const data: Partial<TUser> = {};
-        if (firstName !== undefined && !data.firstName) data.firstName = firstName;
-        if (firstName !== undefined && !data.pseudo) data.pseudo = firstName;
-        if (!data.joinedBets) data.joinedBets = [];
-        if (!data.pendingInvitations) data.pendingInvitations = [];
-
-        setDoc(userDocRef, data, { merge: true });
-      }
-    }
   }
 
   async function signUp(_email: string, password: string, firstName: string) {
@@ -99,11 +71,18 @@ export default function useAuth() {
       setIsSubmitting(true);
 
       const email = _email.toLowerCase();
-      const { user } = await signInWithEmailAndPassword(auth, email, password);
-      await createOrUpdateUserDoc(email);
+      const { user: firebaseUser } = await signInWithEmailAndPassword(auth, email, password);
+      const user = await createOrUpdateUserDoc(email);
 
-      if (user.emailVerified) {
+      if (firebaseUser.emailVerified) {
+        const [pendingInvitations, joinedBets] = await Promise.all([
+          getBets({ user, status: 'pending' }),
+          getBets({ user, status: 'accepted' }),
+        ]);
+
         setCurrentUser(user);
+        setJoinedBets(joinedBets);
+        setPendingInvitations(pendingInvitations);
       } else {
         const toastId = toast.error(
           <div className="flex items-center gap-2">
@@ -111,7 +90,7 @@ export default function useAuth() {
             <Button
               label="Renvoyer l'e-mail de vérification"
               onClick={() => {
-                sendEmailVerification(user);
+                sendEmailVerification(firebaseUser);
                 toast.dismiss(toastId);
                 toast.success(
                   <span className="text-sm">Un e-mail de vérification a été envoyé à {email}</span>,
@@ -144,14 +123,21 @@ export default function useAuth() {
       if (!auth) throw new Error('auth is undefined');
       if (!db) throw new Error('db is undefined');
 
-      const { user } = await signInWithPopup(auth, googleAuthProvider);
-      const { email } = user;
+      const {
+        user: { email, displayName },
+      } = await signInWithPopup(auth, googleAuthProvider);
       if (!email) throw new Error('email is undefined');
 
-      const firstName = user.displayName?.split(' ')[0] || `Utilisateur ${new Date().getTime()}`;
-      createOrUpdateUserDoc(email, firstName);
+      const firstName = displayName?.split(' ')[0] || `Utilisateur ${new Date().getTime()}`;
+      const user = await createOrUpdateUserDoc(email, firstName);
+      const [pendingInvitations, joinedBets] = await Promise.all([
+        getBets({ user, status: 'pending' }),
+        getBets({ user, status: 'accepted' }),
+      ]);
 
       setCurrentUser(user);
+      setJoinedBets(joinedBets);
+      setPendingInvitations(pendingInvitations);
     } catch (err) {
       console.error(err);
       toast.error(<span className="text-sm">La connexion a échoué</span>, {
