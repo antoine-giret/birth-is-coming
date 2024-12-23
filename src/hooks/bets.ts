@@ -130,6 +130,22 @@ export default function useBets() {
     }, []);
   }
 
+  async function getBet(id: string): Promise<TBet> {
+    if (!db) throw new Error('db is undefined');
+
+    const betDocRef = doc(db, 'bets', id) as DocumentReference<TFirebaseBet, TFirebaseBet>;
+    const betDocSnap = await getDoc(betDocRef);
+
+    if (!betDocSnap.exists()) throw new Error('bet not found');
+
+    const data = betDocSnap.data();
+
+    const bet = parseBet(id, data);
+    if (!bet) throw new Error('invalid bet');
+
+    return bet;
+  }
+
   async function updateInvitation({
     user: { email },
     invitationId,
@@ -159,5 +175,5 @@ export default function useBets() {
     return true;
   }
 
-  return { getBets, updateInvitation };
+  return { getBet, getBets, updateInvitation };
 }

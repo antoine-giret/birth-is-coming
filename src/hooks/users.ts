@@ -12,10 +12,7 @@ export type TFirebaseUser = Partial<{
 export default function useUsers() {
   const { auth, db } = useContext(AppContext);
 
-  async function parseUser(
-    email: string,
-    { firstName, pseudo }: Partial<TFirebaseUser>,
-  ): Promise<TUser> {
+  function parseUser(email: string, { firstName, pseudo }: Partial<TFirebaseUser>): TUser {
     return {
       email,
       firstName: firstName || '',
@@ -36,7 +33,7 @@ export default function useUsers() {
     if (!userDocSnap.exists()) return { docRef: userDocRef, data: {}, user: null };
 
     const data = userDocSnap.data();
-    const user = await parseUser(email, data);
+    const user = parseUser(email, data);
 
     return { docRef: userDocRef, data, user };
   }
