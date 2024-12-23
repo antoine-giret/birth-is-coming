@@ -19,13 +19,17 @@ export default function DoneBets() {
     <CardsList
       items={betsDone.reduce<TCardsListItem[]>((res, { id: key, results }) => {
         if (results) {
-          const { firstName, gender, birthDate } = results;
+          const { firstName, gender, birthDate, size, weight } = results;
 
           res.push({
             key,
             href: `/bets/${key}`,
             title: `${firstName}`,
-            description: `${gender === 'male' ? 'Né' : 'Née'} le ${new Intl.DateTimeFormat('fr-FR').format(birthDate)}`,
+            description: [
+              `${gender === 'male' ? 'Né' : 'Née'} le ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(birthDate)}`,
+              `${size}cm`,
+              `${weight}kg`,
+            ].join(` • `),
           });
         }
 

@@ -21,6 +21,7 @@ export default function OngoingBets() {
         actions={
           <>
             <Button
+              isRouterLink
               color="primary"
               href="/bets/new"
               icon={<span>🚀</span>}
@@ -34,8 +35,9 @@ export default function OngoingBets() {
           <>
             Lancez les paris pour la naissance de votre futur bébé
             <br />
-            ou demandez à vous faire inviter sur votre email {currentUser?.email} pour participer à
-            un pari.
+            ou demandez à vous faire inviter sur votre adresse e-mail{' '}
+            <span style={{ textDecoration: 'underline' }}>{currentUser?.email}</span> pour
+            participer à un pari.
           </>
         }
         title="Aucun pari en cours"
@@ -67,7 +69,7 @@ export default function OngoingBets() {
             key,
             href: `/bets/${key}`,
             title: `Bébé de ${motherFirstName} et ${fatherFirstName}`,
-            description: `Naissance prévue le ${new Intl.DateTimeFormat('fr-FR').format(scheduledDate)}`,
+            description: `Naissance prévue le ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(scheduledDate)}`,
           }),
         )}
         title="Paris en cours"

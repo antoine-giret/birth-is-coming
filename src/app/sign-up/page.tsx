@@ -31,7 +31,7 @@ export default function SignUpPage() {
               onClick={signInWithGoogle}
             />
           </div>
-          <Divider text="Ou créez un compte avec votre email" />
+          <Divider text="Ou créez un compte avec votre adresse e-mail" />
           <form className="space-y-4">
             <Fieldset className="space-y-4">
               <Field

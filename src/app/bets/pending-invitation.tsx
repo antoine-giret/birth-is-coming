@@ -25,7 +25,8 @@ export default function PendingInvitation({
           Bébé de {motherFirstName} et {fatherFirstName}
         </p>
         <p className="text-sm text-gray-500">
-          Naissance prévue le {new Intl.DateTimeFormat('fr-FR').format(scheduledDate)}
+          Naissance prévue le{' '}
+          {new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(scheduledDate)}
         </p>
       </div>
       <div className=" shrink-0 flex items-center gap-1">
