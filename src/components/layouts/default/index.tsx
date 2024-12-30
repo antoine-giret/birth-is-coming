@@ -25,12 +25,12 @@ export default function DefaultLayout({
   }, [isPublic]);
 
   return (
-    <div className="flex flex-col min-h-full font-[family-name:var(--font-geist-sans)]">
+    <div id="root" className="flex flex-col min-h-full font-[family-name:var(--font-geist-sans)]">
       <Header />
       <main className="flex flex-col grow">
         <div
           className={[
-            'flex flex-col grow gap-6 lg:gap-9 mx-auto w-full max-w-7xl px-3 py-6 sm:py-9 lg:py-12 sm:px-6 lg:px-9',
+            'flex flex-col grow gap-6 lg:gap-9 mx-auto w-full max-w-7xl px-6 py-6 sm:py-9 lg:py-12 lg:px-9',
             justifyCenter ? 'md:justify-center' : '',
           ].join(' ')}
         >

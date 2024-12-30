@@ -17,10 +17,7 @@ export default function NewBetPage() {
     <AuthPage>
       {currentUser && (
         <DefaultLayout>
-          <PageTitle
-            backPath="/bets"
-            text="Lancez les paris pour la naissance de votre futur bébé"
-          />
+          <PageTitle backPath="/bets" text="Lancez les paris" />
         </DefaultLayout>
       )}
     </AuthPage>

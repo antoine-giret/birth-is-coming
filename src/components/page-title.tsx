@@ -14,7 +14,7 @@ export default function PageTitle({
       {backPath && (
         <Button
           as={Link}
-          className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-black/10"
+          className="flex items-center shrink-0 justify-center w-8 h-8 rounded-full hover:bg-black/10"
           href={backPath}
           title="Retour"
         >

@@ -25,7 +25,7 @@ export default function OngoingBets() {
               color="primary"
               href="/bets/new"
               icon={<span>🚀</span>}
-              label="Lancez un pari"
+              label="Lancez les paris"
               size="large"
               variant="contained"
             />
@@ -51,10 +51,11 @@ export default function OngoingBets() {
         actions={
           <>
             <Button
+              isRouterLink
               color="primary"
               href="/bets/new"
               icon={<span>🚀</span>}
-              label="Lancez un pari"
+              label="Lancez les paris"
               size="large"
               variant="contained"
             />

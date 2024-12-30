@@ -58,8 +58,8 @@ export default function BetPage({ params }: { params: Promise<{ id: string }> })
             backPath="/bets"
             text={
               results
-                ? `Résultats des paris pour la naissance de ${results.firstName}`
-                : `Pariez pour la naissance du bébé de ${motherFirstName} et ${fatherFirstName}`
+                ? `${results.firstName} est ${results.gender === 'male' ? 'né' : 'née'}`
+                : `Bébé de ${motherFirstName} et ${fatherFirstName}`
             }
           />
         </DefaultLayout>
