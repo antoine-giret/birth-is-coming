@@ -66,10 +66,13 @@ export default function OngoingBets() {
       />
       <CardsList
         items={betsInProgress.map(
-          ({ id: key, config: { fatherFirstName, motherFirstName, scheduledDate } }) => ({
+          ({
+            id: key,
+            config: { firstParentFirstName, secondParentFirstName, scheduledDate },
+          }) => ({
             key,
             href: `/bets/${key}`,
-            title: `Bébé de ${motherFirstName} et ${fatherFirstName}`,
+            title: `Bébé de ${firstParentFirstName} et ${secondParentFirstName}`,
             description: `Naissance prévue le ${new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(scheduledDate)}`,
           }),
         )}

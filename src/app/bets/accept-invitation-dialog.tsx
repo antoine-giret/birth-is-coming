@@ -21,7 +21,7 @@ export default function AcceptInvitationDialog({
 }) {
   const {
     id: invitationId,
-    config: { motherFirstName, fatherFirstName, gender },
+    config: { firstParentFirstName, secondParentFirstName, gender },
   } = pendingInvitation;
   const [loading, setLoading] = useState(false);
   const {
@@ -73,7 +73,7 @@ export default function AcceptInvitationDialog({
       }
       loading={loading}
       open={open}
-      title={`Accepter l'invitation de ${motherFirstName} et ${fatherFirstName} ?`}
+      title={`Accepter l'invitation de ${firstParentFirstName} et ${secondParentFirstName} ?`}
       toggle={() => onClose(false)}
     >
       <p className="text-base text-gray-500">

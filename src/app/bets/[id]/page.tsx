@@ -46,7 +46,7 @@ export default function BetPage({ params }: { params: Promise<{ id: string }> })
   if (!bet) return <Loading />;
 
   const {
-    config: { motherFirstName, fatherFirstName },
+    config: { firstParentFirstName, secondParentFirstName },
     results,
   } = bet;
 
@@ -59,7 +59,7 @@ export default function BetPage({ params }: { params: Promise<{ id: string }> })
             text={
               results
                 ? `${results.firstName} est ${results.gender === 'male' ? 'né' : 'née'}`
-                : `Bébé de ${motherFirstName} et ${fatherFirstName}`
+                : `Bébé de ${firstParentFirstName} et ${secondParentFirstName}`
             }
           />
         </DefaultLayout>

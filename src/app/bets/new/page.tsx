@@ -4,6 +4,8 @@ import { useContext } from 'react';
 
 import AppContext from '../../context';
 
+import BetForm from './form';
+
 import AuthPage from '@/components/auth-page';
 import DefaultLayout from '@/components/layouts/default';
 import PageTitle from '@/components/page-title';
@@ -18,6 +20,7 @@ export default function NewBetPage() {
       {currentUser && (
         <DefaultLayout>
           <PageTitle backPath="/bets" text="Lancez les paris" />
+          <BetForm />
         </DefaultLayout>
       )}
     </AuthPage>

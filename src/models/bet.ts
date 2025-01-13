@@ -6,12 +6,14 @@ export type TBetResults = {
   weight: number;
 } | null;
 
+export type TGender = 'male' | 'female' | 'unknown';
+
 type TBet = {
   id: string;
   config: {
-    fatherFirstName: string;
-    gender: 'male' | 'female' | 'unknown';
-    motherFirstName: string;
+    firstParentFirstName: string;
+    gender: TGender;
+    secondParentFirstName: string;
     scheduledDate: Date;
   };
   results: TBetResults;

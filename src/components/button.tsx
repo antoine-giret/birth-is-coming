@@ -20,21 +20,27 @@ export default function Button({
   variant?: 'outlined' | 'contained';
 } & ({ isRouterLink: true; href: string } | { onClick?: () => void })) {
   const containedColors = {
-    default: 'bg-gray-500 hover:bg-gray-400 focus-visible:outline-gray-500',
-    disabled: 'bg-gray-400',
-    error: 'bg-red-500 hover:bg-red-400 focus-visible:outline-red-500',
-    primary: 'bg-indigo-500 hover:bg-indigo-400 focus-visible:outline-indigo-500',
+    default: [
+      'bg-gray-500',
+      disabled ? '' : 'hover:bg-gray-400 focus-visible:outline-gray-500',
+    ].join(' '),
+    error: ['bg-red-500', disabled ? '' : 'hover:bg-red-400 focus-visible:outline-red-500'].join(
+      ' ',
+    ),
+    primary: [
+      'bg-indigo-500',
+      disabled ? '' : 'hover:bg-indigo-400 focus-visible:outline-indigo-500',
+    ].join(' '),
   };
   const outlinedColors = {
-    default: 'ring-gray-300 hover:bg-black/10',
-    disabled: 'ring-gray-300 text-gray-500',
-    error: 'ring-red-300 hover:bg-red/10',
-    primary: 'ring-indigo-300 hover:bg-indigo/10',
+    default: ['ring-gray-300', disabled ? '' : 'hover:bg-black/10'].join(' '),
+    error: ['ring-red-300', disabled ? '' : 'hover:bg-red/10'].join(' '),
+    primary: ['ring-indigo-300', disabled ? '' : 'hover:bg-indigo/10'].join(' '),
   };
   const className =
     variant === 'contained'
-      ? `flex gap-2 items-center justify-center rounded-md ${containedColors[disabled ? 'disabled' : color || 'default']} font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`
-      : `flex gap-2 items-center justify-center rounded-md font-semibold ring-1 ring-inset ${outlinedColors[disabled ? 'disabled' : color || 'default']}`;
+      ? `flex gap-2 items-center justify-center rounded-md ${containedColors[color || 'default']} font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`
+      : `flex gap-2 items-center justify-center rounded-md font-semibold ring-1 ring-inset ${outlinedColors[color || 'default']}`;
   const commonsProps = {
     className: [
       className,
@@ -45,6 +51,10 @@ export default function Button({
           ? 'px-3.5 py-2.5 text-base'
           : 'px-3 py-2 text-base',
     ].join(' '),
+    style: {
+      filter: disabled ? 'grayscale(1)' : undefined,
+      opacity: disabled ? 0.5 : 1,
+    },
     disabled,
   };
 

@@ -15,14 +15,14 @@ export default function PendingInvitation({
   pendingInvitation: TBet;
 }) {
   const {
-    config: { scheduledDate, motherFirstName, fatherFirstName },
+    config: { scheduledDate, firstParentFirstName, secondParentFirstName },
   } = pendingInvitation;
 
   return (
     <li className="flex items-center gap-3 px-3 py-2">
       <div className="flex-grow">
         <p className="text-base font-semibold">
-          Bébé de {motherFirstName} et {fatherFirstName}
+          Bébé de {firstParentFirstName} et {secondParentFirstName}
         </p>
         <p className="text-sm text-gray-500">
           Naissance prévue le{' '}

@@ -23,7 +23,7 @@ export default function RejectInvitationDialog({
 }) {
   const {
     id: invitationId,
-    config: { motherFirstName, fatherFirstName, gender },
+    config: { firstParentFirstName, secondParentFirstName, gender },
   } = pendingInvitation;
   const [loading, setLoading] = useState(false);
   const {
@@ -72,7 +72,7 @@ export default function RejectInvitationDialog({
       }
       loading={loading}
       open={open}
-      title={`Refuser l'invitation de ${motherFirstName} et ${fatherFirstName} ?`}
+      title={`Refuser l'invitation de ${firstParentFirstName} et ${secondParentFirstName} ?`}
       toggle={() => onClose(false)}
     >
       <p className="text-base text-gray-500">

@@ -4,6 +4,7 @@ import {
   Query,
   QueryDocumentSnapshot,
   Timestamp,
+  addDoc,
   collection,
   doc,
   getDoc,
@@ -16,7 +17,7 @@ import {
 import { useContext } from 'react';
 
 import AppContext from '@/app/context';
-import TBet, { TBetResults } from '@/models/bet';
+import TBet, { TBetResults, TGender } from '@/models/bet';
 import TUser from '@/models/user';
 
 export type TFirebaseBetResults = Partial<{
@@ -29,9 +30,9 @@ export type TFirebaseBetResults = Partial<{
 
 export type TFirebaseBet = Partial<{
   config: Partial<{
-    fatherFirstName: string;
+    firstParentFirstName: string;
     gender: string;
-    motherFirstName: string;
+    secondParentFirstName: string;
     scheduledDate: Timestamp;
   }>;
   results: TFirebaseBetResults;
@@ -67,14 +68,14 @@ export default function useBets() {
 
   function parseBet(id: string, { config, results }: TFirebaseBet): TBet | null {
     if (!config) return null;
-    const { fatherFirstName, motherFirstName, gender, scheduledDate } = config;
-    if (!fatherFirstName || !motherFirstName || !scheduledDate) return null;
+    const { firstParentFirstName, secondParentFirstName, gender, scheduledDate } = config;
+    if (!firstParentFirstName || !secondParentFirstName || !scheduledDate) return null;
 
     return {
       id,
       config: {
-        fatherFirstName,
-        motherFirstName,
+        firstParentFirstName,
+        secondParentFirstName,
         gender: gender === 'male' ? 'male' : gender === 'female' ? 'female' : 'unknown',
         scheduledDate: scheduledDate.toDate(),
       },
@@ -175,5 +176,47 @@ export default function useBets() {
     return true;
   }
 
-  return { getBet, getBets, updateInvitation };
+  async function createBet({
+    firstParentFirstName,
+    secondParentFirstName,
+    gender,
+    scheduledDate,
+    userEmail,
+  }: {
+    firstParentFirstName: string;
+    gender: TGender;
+    scheduledDate: string;
+    secondParentFirstName: string;
+    userEmail: string;
+  }): Promise<TBet> {
+    if (!db) throw new Error('db is undefined');
+
+    const betDocRef = await addDoc<TFirebaseBet, TFirebaseBet>(collection(db, 'bets'), {
+      config: {
+        firstParentFirstName,
+        secondParentFirstName,
+        gender,
+        scheduledDate: Timestamp.fromDate(new Date(scheduledDate)),
+      },
+    });
+
+    await addDoc(collection(db, 'invitations'), {
+      betId: betDocRef.id,
+      isAdmin: true,
+      status: 'accepted',
+      userEmail,
+    });
+
+    const betDocSnap = await getDoc(betDocRef);
+    if (!betDocSnap.exists()) throw new Error('bet not found');
+
+    const data = betDocSnap.data();
+
+    const bet = parseBet(betDocRef.id, data);
+    if (!bet) throw new Error('invalid bet');
+
+    return bet;
+  }
+
+  return { getBet, getBets, updateInvitation, createBet };
 }
