@@ -6,6 +6,7 @@ import {
   Timestamp,
   addDoc,
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -258,5 +259,15 @@ export default function useBets() {
     return getBet(id);
   }
 
-  return { getBet, getBets, updateInvitation, createBet, updateBet };
+  async function removeBet(id: string): Promise<boolean> {
+    if (!db) throw new Error('db is undefined');
+
+    const betDocRef = doc(db, 'bets', id) as DocumentReference<TFirebaseBet, TFirebaseBet>;
+
+    await deleteDoc(betDocRef);
+
+    return true;
+  }
+
+  return { getBet, getBets, updateInvitation, createBet, updateBet, removeBet };
 }
