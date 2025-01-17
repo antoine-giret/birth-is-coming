@@ -1,5 +1,5 @@
 import { Fieldset } from '@headlessui/react';
-import { ExclamationCircleIcon } from '@heroicons/react/24/outline';
+import { CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { useRouter } from 'next/navigation';
 import { useContext, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -10,7 +10,7 @@ import Field from '@/components/field';
 import Loader from '@/components/loader';
 import Select from '@/components/select';
 import useBets from '@/hooks/bets';
-import { TGender } from '@/models/bet';
+import TBet, { TBetConfig, TGender } from '@/models/bet';
 
 const genders: Array<{ label: React.ReactNode; value: TGender }> = [
   { value: 'male', label: 'Garçon' },
@@ -18,40 +18,106 @@ const genders: Array<{ label: React.ReactNode; value: TGender }> = [
   { value: 'unknown', label: 'Surprise !' },
 ];
 
-export default function BetForm() {
-  const [firstParentFirstName, setFirstParentFirstName] = useState('');
-  const [secondParentFirstName, setSecondParentFirstName] = useState('');
-  const [scheduledDate, setScheduledDate] = useState('');
-  const [gender, setGender] = useState<TGender>('female');
+export default function BetForm({ bet }: { bet?: TBet }) {
+  const [firstParentFirstName, setFirstParentFirstName] = useState(
+    bet?.config.firstParentFirstName || '',
+  );
+  const [secondParentFirstName, setSecondParentFirstName] = useState(
+    bet?.config.secondParentFirstName || '',
+  );
+  const [scheduledDate, setScheduledDate] = useState(
+    bet?.config.scheduledDate
+      ? new Intl.DateTimeFormat('fr-CA', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        }).format(bet.config.scheduledDate)
+      : '',
+  );
+  const [gender, setGender] = useState<TGender>(bet?.config.gender || 'female');
   const [submitting, setSubmitting] = useState(false);
   const {
     user: { current: currentUser, joinedBets },
     setJoinedBets,
   } = useContext(AppContext);
   const router = useRouter();
-  const { createBet } = useBets();
+  const { createBet, updateBet } = useBets();
 
   async function handleSubmit() {
     if (!joinedBets || !currentUser) return;
 
     setSubmitting(true);
 
-    try {
-      const newBet = await createBet({
-        firstParentFirstName,
-        secondParentFirstName,
-        gender,
-        scheduledDate,
-        userEmail: currentUser.email,
-      });
+    if (bet) {
+      try {
+        const {
+          config: {
+            firstParentFirstName: prevFirstParentFirstName,
+            secondParentFirstName: prevSecondParentFirstName,
+            scheduledDate: _prevScheduledDate,
+            gender: prevGender,
+          },
+        } = bet;
+        const prevScheduledDate = new Intl.DateTimeFormat('fr-CA', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        }).format(_prevScheduledDate);
+        const updatedConfig: Partial<
+          { scheduledDate: string } & Omit<TBetConfig, 'scheduledDate'>
+        > = {};
 
-      setJoinedBets([...joinedBets, newBet]);
-      router.push(`/bets/${newBet.id}`);
-    } catch (err) {
-      console.error(err);
-      toast.error(<span className="text-sm">Les paris n&apos;ont pas pu être lancés</span>, {
-        icon: () => <ExclamationCircleIcon style={{ color: '#e74c3c' }} />,
-      });
+        if (firstParentFirstName.localeCompare(prevFirstParentFirstName) !== 0)
+          updatedConfig.firstParentFirstName = firstParentFirstName;
+        if (secondParentFirstName.localeCompare(prevSecondParentFirstName) !== 0)
+          updatedConfig.secondParentFirstName = secondParentFirstName;
+        if (scheduledDate.localeCompare(prevScheduledDate) !== 0)
+          updatedConfig.scheduledDate = scheduledDate;
+        if (gender.localeCompare(prevGender) !== 0) updatedConfig.gender = gender;
+
+        if (Object.keys(updatedConfig).length > 0) {
+          const updatedBet = await updateBet(bet.id, { updatedConfig });
+          const newBets = [...joinedBets];
+          const index = newBets.findIndex(({ id }) => bet.id === id);
+          newBets.splice(index, 1, updatedBet);
+
+          setJoinedBets(newBets);
+        }
+
+        toast.success(
+          <span className="text-sm">Les modifications ont bien été enregistrées</span>,
+          {
+            icon: () => <CheckCircleIcon style={{ color: '#07bc0c' }} />,
+          },
+        );
+        router.push(`/bets/${bet.id}`);
+      } catch (err) {
+        console.error(err);
+        toast.error(
+          <span className="text-sm">Les modifications n&apos;ont pas pu être enregistrées</span>,
+          {
+            icon: () => <ExclamationCircleIcon style={{ color: '#e74c3c' }} />,
+          },
+        );
+      }
+    } else {
+      try {
+        const newBet = await createBet({
+          firstParentFirstName,
+          secondParentFirstName,
+          gender,
+          scheduledDate,
+          userEmail: currentUser.email,
+        });
+
+        setJoinedBets([...joinedBets, newBet]);
+        router.push(`/bets/${newBet.id}`);
+      } catch (err) {
+        console.error(err);
+        toast.error(<span className="text-sm">Les paris n&apos;ont pas pu être lancés</span>, {
+          icon: () => <ExclamationCircleIcon style={{ color: '#e74c3c' }} />,
+        });
+      }
     }
 
     setSubmitting(false);
@@ -106,8 +172,8 @@ export default function BetForm() {
               color="primary"
               disabled={!firstParentFirstName || !secondParentFirstName || !scheduledDate}
               variant="contained"
-              icon={submitting ? <Loader color="#fff" size={16} /> : <span>🚀</span>}
-              label="Lancer les paris"
+              icon={submitting ? <Loader color="#fff" size={16} /> : !bet && <span>🚀</span>}
+              label={bet ? 'Enregistrer les modifications' : 'Lancer les paris'}
               onClick={handleSubmit}
             />
           </div>

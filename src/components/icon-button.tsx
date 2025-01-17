@@ -1,6 +1,6 @@
 import { Button as HeadlessUIButton } from '@headlessui/react';
 
-type TColor = 'success' | 'error';
+type TColor = 'default' | 'success' | 'error';
 
 export default function IconButton({
   color,
@@ -8,19 +8,20 @@ export default function IconButton({
   title,
   onClick,
 }: {
-  color: TColor;
+  color?: TColor;
   icon: React.ReactNode;
-  onClick: () => void;
+  onClick?: () => void;
   title: string;
 }) {
   const colors: { [key in TColor]: string } = {
+    default: '',
     success: 'ring-green-500 hover:bg-green-50',
     error: 'ring-red-500 hover:bg-red-50',
   };
 
   return (
     <HeadlessUIButton
-      className={`h-6 w-6 flex items-center justify-center rounded-full ring-1 ring-inset ${colors[color]}`}
+      className={`h-6 w-6 flex items-center justify-center rounded-full ring-1 ring-inset ${colors[color || 'default']}`}
       onClick={onClick}
       title={title}
     >

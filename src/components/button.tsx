@@ -37,13 +37,15 @@ export default function Button({
     error: ['ring-red-300', disabled ? '' : 'hover:bg-red/10'].join(' '),
     primary: ['ring-indigo-300', disabled ? '' : 'hover:bg-indigo/10'].join(' '),
   };
-  const className =
+  const commonsClassName = 'flex gap-2 items-center justify-center rounded-md font-semibold';
+  const variantClassName =
     variant === 'contained'
-      ? `flex gap-2 items-center justify-center rounded-md ${containedColors[color || 'default']} font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`
-      : `flex gap-2 items-center justify-center rounded-md font-semibold ring-1 ring-inset ${outlinedColors[color || 'default']}`;
+      ? `${containedColors[color || 'default']} text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2`
+      : `ring-1 ring-inset ${outlinedColors[color || 'default']}`;
   const commonsProps = {
     className: [
-      className,
+      commonsClassName,
+      variantClassName,
       fullWidth ? 'w-full' : '',
       size === 'small'
         ? 'px-2.5 py-1.5 text-sm'

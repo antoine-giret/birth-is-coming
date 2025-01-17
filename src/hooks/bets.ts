@@ -12,12 +12,13 @@ import {
   limit,
   query,
   setDoc,
+  updateDoc,
   where,
 } from 'firebase/firestore';
 import { useContext } from 'react';
 
 import AppContext from '@/app/context';
-import TBet, { TBetResults, TGender } from '@/models/bet';
+import TBet, { TBetConfig, TBetResults, TBetUser, TUserStatus } from '@/models/bet';
 import TUser from '@/models/user';
 
 export type TFirebaseBetResults = Partial<{
@@ -28,22 +29,22 @@ export type TFirebaseBetResults = Partial<{
   weight: number;
 }>;
 
-export type TFirebaseBet = Partial<{
-  config: Partial<{
-    firstParentFirstName: string;
-    gender: string;
-    secondParentFirstName: string;
-    scheduledDate: Timestamp;
-  }>;
-  results: TFirebaseBetResults;
+type TFirebaseBetConfig = Partial<{
+  firstParentFirstName: string;
+  gender: string;
+  secondParentFirstName: string;
+  scheduledDate: Timestamp;
 }>;
 
-export type TFirebaseInvitationStatus = 'pending' | 'accepted' | 'rejected';
+export type TFirebaseBet = Partial<{
+  config: TFirebaseBetConfig;
+  results: TFirebaseBetResults;
+}>;
 
 export type TFirebaseInvitation = {
   betId: string;
   isAdmin?: boolean;
-  status: TFirebaseInvitationStatus;
+  status: TUserStatus;
   userEmail: string;
 };
 
@@ -87,7 +88,7 @@ export default function useBets() {
     user: { email },
     status,
   }: {
-    status: TFirebaseInvitationStatus;
+    status: TUserStatus;
     user: TUser;
   }): Promise<TBet[]> {
     if (!db) throw new Error('db is undefined');
@@ -144,6 +145,23 @@ export default function useBets() {
     const bet = parseBet(id, data);
     if (!bet) throw new Error('invalid bet');
 
+    const invitationsRef = query(
+      collection(db, 'invitations'),
+      where('betId', '==', bet.id),
+    ) as Query<TFirebaseInvitation, TFirebaseInvitation>;
+    const invitationsSnaps = await getDocs(invitationsRef);
+    const users: TBetUser[] = [];
+
+    invitationsSnaps.forEach((invitationSnap) => {
+      if (invitationSnap.exists()) {
+        const { isAdmin, userEmail: email, status } = invitationSnap.data();
+
+        users.push({ isAdmin: isAdmin || false, email, status });
+      }
+    });
+
+    bet.users = users;
+
     return bet;
   }
 
@@ -153,7 +171,7 @@ export default function useBets() {
     data,
   }: {
     invitationId: string;
-    data: { status?: TFirebaseInvitationStatus };
+    data: { status?: TUserStatus };
     user: TUser;
   }): Promise<boolean> {
     if (!db) throw new Error('db is undefined');
@@ -182,13 +200,10 @@ export default function useBets() {
     gender,
     scheduledDate,
     userEmail,
-  }: {
-    firstParentFirstName: string;
-    gender: TGender;
-    scheduledDate: string;
-    secondParentFirstName: string;
-    userEmail: string;
-  }): Promise<TBet> {
+  }: { scheduledDate: string; userEmail: string } & Omit<
+    TBetConfig,
+    'scheduledDate'
+  >): Promise<TBet> {
     if (!db) throw new Error('db is undefined');
 
     const betDocRef = await addDoc<TFirebaseBet, TFirebaseBet>(collection(db, 'bets'), {
@@ -218,5 +233,30 @@ export default function useBets() {
     return bet;
   }
 
-  return { getBet, getBets, updateInvitation, createBet };
+  async function updateBet(
+    id: string,
+    {
+      updatedConfig,
+    }: { updatedConfig?: Partial<{ scheduledDate: string } & Omit<TBetConfig, 'scheduledDate'>> },
+  ): Promise<TBet> {
+    if (!db) throw new Error('db is undefined');
+
+    const betDocRef = doc(db, 'bets', id) as DocumentReference<TFirebaseBet, TFirebaseBet>;
+
+    const data: { [key: string]: string | Timestamp } = {};
+    if (updatedConfig) {
+      const { firstParentFirstName, secondParentFirstName, scheduledDate, gender } = updatedConfig;
+
+      if (firstParentFirstName) data['config.firstParentFirstName'] = firstParentFirstName;
+      if (secondParentFirstName) data['config.secondParentFirstName'] = secondParentFirstName;
+      if (scheduledDate) data['config.scheduledDate'] = Timestamp.fromDate(new Date(scheduledDate));
+      if (gender) data['config.gender'] = gender;
+    }
+
+    await updateDoc(betDocRef, data);
+
+    return getBet(id);
+  }
+
+  return { getBet, getBets, updateInvitation, createBet, updateBet };
 }

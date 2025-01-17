@@ -68,7 +68,7 @@ export default function Header() {
                         disabled={currentUser === undefined}
                       >
                         <span className="absolute -inset-1.5"></span>
-                        <span className="sr-only">Open user menu</span>
+                        <span className="sr-only">Ouvrir le menu utilisateur</span>
                         <UserIcon className="w-4 text-white" />
                       </MenuButton>
                     </div>
