@@ -34,8 +34,8 @@ export default function Button({
   };
   const outlinedColors = {
     default: ['ring-gray-300', disabled ? '' : 'hover:bg-black/10'].join(' '),
-    error: ['ring-red-300', disabled ? '' : 'hover:bg-red/10'].join(' '),
-    primary: ['ring-indigo-300', disabled ? '' : 'hover:bg-indigo/10'].join(' '),
+    error: ['ring-red-300 text-red-500', disabled ? '' : 'hover:bg-red/10'].join(' '),
+    primary: ['ring-indigo-300 text-indigo-500', disabled ? '' : 'hover:bg-indigo/10'].join(' '),
   };
   const commonsClassName = 'flex gap-2 items-center justify-center rounded-md font-semibold';
   const variantClassName =

@@ -1,40 +1,56 @@
 'use client';
 
 import {
-  Button as HeadlessUIButton,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
-} from '@headlessui/react';
-import {
   CheckCircleIcon,
   Cog6ToothIcon,
   ExclamationCircleIcon,
-  PencilIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useContext, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 
 import AppContext from '../../context';
+import BetForm from '../new/form';
 
 import RemoveDialog from './remove-dialog';
 
 import AuthPage from '@/components/auth-page';
+import Button from '@/components/button';
 import DefaultLayout from '@/components/layouts/default';
 import Loading from '@/components/layouts/loading';
 import PageTitle from '@/components/page-title';
+import Tabs from '@/components/tabs';
 import useBets from '@/hooks/bets';
 import TBet from '@/models/bet';
 import TUser from '@/models/user';
 
+const tabs = ['bets', 'participants', 'config'] as const;
+type TTab = (typeof tabs)[number];
+
+const tabsMap: {
+  [key in TTab]: {
+    Icon?: React.ForwardRefExoticComponent<
+      React.PropsWithoutRef<React.SVGProps<SVGSVGElement>> & {
+        title?: string;
+        titleId?: string;
+      } & React.RefAttributes<SVGSVGElement>
+    >;
+    label: React.ReactNode;
+  };
+} = {
+  bets: { label: 'Paris' },
+  participants: { label: 'Participants' },
+  config: { label: 'Configuration', Icon: Cog6ToothIcon },
+};
+
 export default function BetPage({ params }: { params: Promise<{ id: string }> }) {
   const [initialized] = useState(true);
   const [bet, setBet] = useState<TBet | null>();
-  const [isAdmin, setIsAdmin] = useState<boolean>();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const [selectedTab, selectTab] = useState<TTab>(getTabQueryParam());
   const [removeDialogOpen, toggleRemoveDialog] = useState(false);
   const {
     user: { current: currentUser, joinedBets },
@@ -47,14 +63,23 @@ export default function BetPage({ params }: { params: Promise<{ id: string }> })
     if (initialized && currentUser) getBet(currentUser);
   }, [initialized, currentUser]);
 
+  useEffect(() => {
+    selectTab(getTabQueryParam());
+  }, [tabParam]);
+
+  function getTabQueryParam(): TTab {
+    if (tabParam === 'participants' || tabParam === 'config') return tabParam;
+    return 'bets';
+  }
+
   async function getBet(currentUser: TUser) {
     try {
       const id = (await params).id;
       const bet = await _getBet(id);
       setBet(bet);
       setIsAdmin(
-        bet.users?.find(({ email }) => currentUser.email.localeCompare(email) === 0)?.isAdmin ||
-          false,
+        bet.participants?.find(({ email }) => currentUser.email.localeCompare(email) === 0)
+          ?.isAdmin || false,
       );
     } catch (err) {
       console.error(err);
@@ -104,44 +129,6 @@ export default function BetPage({ params }: { params: Promise<{ id: string }> })
         {currentUser && (
           <DefaultLayout>
             <PageTitle
-              actions={
-                isAdmin && (
-                  <Menu as="div" className="relative ml-3">
-                    <MenuButton
-                      className="relative px-2.5 py-1.5 flex gap-2 items-center justify-center rounded-md font-semibold ring-1 ring-inset ring-indigo-300 hover:bg-indigo/10"
-                      disabled={currentUser === undefined}
-                    >
-                      <span className="absolute -inset-1.5"></span>
-                      <span className="sr-only">Ouvrir le menu de configuration</span>
-                      <span className="text-sm">Configurer</span>
-                      <Cog6ToothIcon className="w-6 text-indigo-500" />
-                    </MenuButton>
-                    <MenuItems
-                      transition
-                      className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-100 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in"
-                    >
-                      <MenuItem>
-                        <Link
-                          className="flex gap-2 items-center justify-start w-full px-4 py-2 text-sm data-[focus]:bg-gray-100 data-[focus]:outline-none"
-                          href={`/bets/${bet.id}/update`}
-                        >
-                          <PencilIcon className="w-5" />
-                          Modifier
-                        </Link>
-                      </MenuItem>
-                      <MenuItem>
-                        <HeadlessUIButton
-                          className="flex gap-2 items-center justify-start w-full px-4 py-2 text-sm hover:bg-gray-100 hover:outline-none"
-                          onClick={() => toggleRemoveDialog(true)}
-                        >
-                          <TrashIcon className="w-5 text-red-500" />
-                          Supprimer
-                        </HeadlessUIButton>
-                      </MenuItem>
-                    </MenuItems>
-                  </Menu>
-                )
-              }
               backPath="/bets"
               text={
                 results
@@ -149,6 +136,33 @@ export default function BetPage({ params }: { params: Promise<{ id: string }> })
                   : `Bébé de ${firstParentFirstName} et ${secondParentFirstName}`
               }
             />
+            {isAdmin && (
+              <Tabs
+                selectedKey={selectedTab}
+                items={tabs.map((key) => ({ key, ...tabsMap[key] }))}
+              />
+            )}
+            {!isAdmin || selectedTab === 'bets' ? (
+              <></>
+            ) : selectedTab === 'participants' ? (
+              <></>
+            ) : selectedTab === 'config' ? (
+              <>
+                <BetForm bet={bet} />
+                <div className="flex flex-col items-center">
+                  <Button
+                    color="error"
+                    icon={<TrashIcon className="w-5 text-red-500" />}
+                    label="Supprimer"
+                    onClick={() => toggleRemoveDialog(true)}
+                    variant="outlined"
+                    size="small"
+                  />
+                </div>
+              </>
+            ) : (
+              <></>
+            )}
           </DefaultLayout>
         )}
       </AuthPage>
