@@ -41,10 +41,12 @@ type TFirebaseBetParticipant = Partial<{
   bet: Partial<{
     birthDate: Timestamp;
     boyFirstName: string;
+    created: Timestamp;
     firstName: string;
     gender: string;
     girlFirstName: string;
     size: number;
+    updated: Timestamp;
     weight: number;
   }>;
   email: string;
@@ -117,13 +119,26 @@ export default function useBets() {
     let bet: TParticipantBet | undefined;
     if (participant?.bet) {
       const {
-        bet: { birthDate, size, weight, firstName, gender, girlFirstName, boyFirstName },
+        bet: {
+          updated,
+          birthDate: _birthDate,
+          size,
+          weight,
+          firstName,
+          gender,
+          girlFirstName,
+          boyFirstName,
+        },
       } = participant;
-      if (birthDate && size && weight) {
+      if (_birthDate && size && weight) {
+        const updateDate = updated?.toDate() || new Date();
+        const birthDate = _birthDate.toDate();
+
         if (genderUnknown) {
           if ((gender === 'female' || gender === 'male') && girlFirstName && boyFirstName) {
             bet = {
-              birthDate: birthDate.toDate(),
+              updateDate,
+              birthDate,
               size,
               weight,
               gender,
@@ -132,7 +147,7 @@ export default function useBets() {
             };
           }
         } else if (firstName) {
-          bet = { birthDate: birthDate.toDate(), size, weight, firstName };
+          bet = { updateDate, birthDate, size, weight, firstName };
         }
       }
     }

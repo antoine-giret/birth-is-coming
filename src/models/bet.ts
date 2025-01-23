@@ -20,6 +20,7 @@ export type TBetConfig = {
 export type TParticipantBet = {
   birthDate: Date;
   size: number;
+  updateDate: Date;
   weight: number;
 } & (
   | { firstName: string }

@@ -1,6 +1,53 @@
 export type THeader = { label: React.ReactNode; sortable?: boolean };
 
-export type TRow<T extends string> = { key: string; values: { [key in T]: React.ReactNode } };
+export type TRow<T extends string> = { key: string; values: { [key in T]?: React.ReactNode } };
+
+export function sortStrings(a: string | undefined, b: string | undefined, order: 'asc' | 'desc') {
+  if (a) {
+    if (b)
+      return order === 'asc'
+        ? b
+          ? a.toLowerCase().localeCompare(b.toLowerCase())
+          : -1
+        : a
+          ? b.toLowerCase().localeCompare(a.toLowerCase())
+          : 1;
+    return order === 'asc' ? -1 : 1;
+  }
+
+  if (b) return order === 'asc' ? 1 : -1;
+
+  return 0;
+}
+
+export function sortNumbers(a: number | undefined, b: number | undefined, order: 'asc' | 'desc') {
+  if (a) {
+    if (b) return order === 'asc' ? (b ? a - b : -1) : a ? b - a : 1;
+    return order === 'asc' ? -1 : 1;
+  }
+
+  if (b) return order === 'asc' ? 1 : -1;
+
+  return 0;
+}
+
+export function sortDates(a: Date | undefined, b: Date | undefined, order: 'asc' | 'desc') {
+  if (a) {
+    if (b)
+      return order === 'asc'
+        ? b
+          ? a.getTime() - b.getTime()
+          : -1
+        : a
+          ? b.getTime() - a.getTime()
+          : 1;
+    return order === 'asc' ? -1 : 1;
+  }
+
+  if (b) return order === 'asc' ? 1 : -1;
+
+  return 0;
+}
 
 export default function Table<T extends string>({
   columns,
@@ -49,7 +96,7 @@ export default function Table<T extends string>({
             <tr key={key} className="border-t">
               {columns.map((key) => (
                 <td className="px-6 py-3" key={key}>
-                  {values[key]}
+                  {values[key] || ''}
                 </td>
               ))}
             </tr>

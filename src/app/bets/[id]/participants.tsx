@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import Table, { THeader, TRow } from '@/components/table';
+import Table, { THeader, TRow, sortStrings } from '@/components/table';
 import TBet, { TUserStatus } from '@/models/bet';
 
 const columns = ['email', 'pseudo', 'status', 'bets'] as const;
@@ -20,8 +20,13 @@ export default function Participants({ bet }: { bet: TBet }) {
 
   useEffect(() => {
     setRows(
-      (
-        bet.participants?.map(({ email, pseudo, status, bet }) => ({
+      bet.participants
+        ?.sort((a, b) => {
+          if (orderBy === 'pseudo') return sortStrings(a.pseudo, b.pseudo, order);
+
+          return sortStrings(a.email, b.email, order);
+        })
+        .map(({ email, pseudo, status, bet }) => ({
           key: email,
           values: {
             email,
@@ -29,17 +34,7 @@ export default function Participants({ bet }: { bet: TBet }) {
             status: <StatusBadge status={status} />,
             bets: <BetsStatusBadge hasBet={Boolean(bet)} />,
           },
-        })) || []
-      ).sort((a, b) => {
-        if (orderBy === 'pseudo')
-          return order === 'asc'
-            ? a.values.pseudo.toLowerCase().localeCompare(b.values.pseudo.toLowerCase())
-            : b.values.pseudo.toLowerCase().localeCompare(a.values.pseudo.toLowerCase());
-
-        return order === 'asc'
-          ? a.values.email.toLowerCase().localeCompare(b.values.email.toLowerCase())
-          : b.values.email.toLowerCase().localeCompare(a.values.email.toLowerCase());
-      }),
+        })) || [],
     );
   }, [bet, order, orderBy]);
 
