@@ -17,13 +17,28 @@ export type TBetConfig = {
   scheduledDate: Date;
 };
 
-export type TBetUser = { email: string; isAdmin: boolean; status: TUserStatus };
+export type TParticipantBet = {
+  birthDate: Date;
+  size: number;
+  weight: number;
+} & (
+  | { firstName: string }
+  | { boyFirstName: string; gender: 'male' | 'female'; girlFirstName: string }
+);
+
+export type TBetParticipant = {
+  bet?: TParticipantBet;
+  email: string;
+  isAdmin: boolean;
+  pseudo?: string;
+  status: TUserStatus;
+};
 
 type TBet = {
   id: string;
   config: TBetConfig;
+  participants?: TBetParticipant[];
   results: TBetResults;
-  users?: TBetUser[];
 };
 
 export default TBet;

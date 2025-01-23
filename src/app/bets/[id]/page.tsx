@@ -13,6 +13,7 @@ import { toast } from 'react-toastify';
 import AppContext from '../../context';
 import BetForm from '../new/form';
 
+import Participants from './participants';
 import RemoveDialog from './remove-dialog';
 
 import AuthPage from '@/components/auth-page';
@@ -145,7 +146,7 @@ export default function BetPage({ params }: { params: Promise<{ id: string }> })
             {!isAdmin || selectedTab === 'bets' ? (
               <></>
             ) : selectedTab === 'participants' ? (
-              <></>
+              <Participants bet={bet} />
             ) : selectedTab === 'config' ? (
               <>
                 <BetForm bet={bet} />

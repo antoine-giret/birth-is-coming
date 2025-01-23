@@ -18,9 +18,37 @@ import {
 } from 'firebase/firestore';
 import { useContext } from 'react';
 
+import { TFirebaseUser } from './users';
+
 import AppContext from '@/app/context';
-import TBet, { TBetConfig, TBetResults, TBetUser, TUserStatus } from '@/models/bet';
+import TBet, {
+  TBetConfig,
+  TBetParticipant,
+  TBetResults,
+  TParticipantBet,
+  TUserStatus,
+} from '@/models/bet';
 import TUser from '@/models/user';
+
+type TFirebaseBetConfig = Partial<{
+  firstParentFirstName: string;
+  gender: string;
+  secondParentFirstName: string;
+  scheduledDate: Timestamp;
+}>;
+
+type TFirebaseBetParticipant = Partial<{
+  bet: Partial<{
+    birthDate: Timestamp;
+    boyFirstName: string;
+    firstName: string;
+    gender: string;
+    girlFirstName: string;
+    size: number;
+    weight: number;
+  }>;
+  email: string;
+}>;
 
 export type TFirebaseBetResults = Partial<{
   birthDate: Timestamp;
@@ -30,15 +58,9 @@ export type TFirebaseBetResults = Partial<{
   weight: number;
 }>;
 
-type TFirebaseBetConfig = Partial<{
-  firstParentFirstName: string;
-  gender: string;
-  secondParentFirstName: string;
-  scheduledDate: Timestamp;
-}>;
-
 export type TFirebaseBet = Partial<{
   config: TFirebaseBetConfig;
+  participants: { [email: string]: TFirebaseBetParticipant };
   results: TFirebaseBetResults;
 }>;
 
@@ -83,6 +105,39 @@ export default function useBets() {
       },
       results: parseResults(results),
     };
+  }
+
+  function parseParticipantBet({
+    genderUnknown,
+    participant,
+  }: {
+    genderUnknown: boolean;
+    participant?: TFirebaseBetParticipant;
+  }): TParticipantBet | undefined {
+    let bet: TParticipantBet | undefined;
+    if (participant?.bet) {
+      const {
+        bet: { birthDate, size, weight, firstName, gender, girlFirstName, boyFirstName },
+      } = participant;
+      if (birthDate && size && weight) {
+        if (genderUnknown) {
+          if ((gender === 'female' || gender === 'male') && girlFirstName && boyFirstName) {
+            bet = {
+              birthDate: birthDate.toDate(),
+              size,
+              weight,
+              gender,
+              girlFirstName,
+              boyFirstName,
+            };
+          }
+        } else if (firstName) {
+          bet = { birthDate: birthDate.toDate(), size, weight, firstName };
+        }
+      }
+    }
+
+    return bet;
   }
 
   async function getBets({
@@ -150,18 +205,42 @@ export default function useBets() {
       collection(db, 'invitations'),
       where('betId', '==', bet.id),
     ) as Query<TFirebaseInvitation, TFirebaseInvitation>;
-    const invitationsSnaps = await getDocs(invitationsRef);
-    const users: TBetUser[] = [];
+    const _invitationsSnaps = await getDocs(invitationsRef);
+    const genderUnknown = bet.config.gender === 'unknown';
 
-    invitationsSnaps.forEach((invitationSnap) => {
-      if (invitationSnap.exists()) {
+    const invitationsSnaps: QueryDocumentSnapshot<TFirebaseInvitation, TFirebaseInvitation>[] = [];
+    _invitationsSnaps.forEach((invitationSnap) => invitationsSnaps.push(invitationSnap));
+
+    const participants = await Promise.all(
+      invitationsSnaps.map(async (invitationSnap): Promise<TBetParticipant | null> => {
+        if (!invitationSnap.exists()) return null;
+
         const { isAdmin, userEmail: email, status } = invitationSnap.data();
+        const participant = data.participants?.[email];
 
-        users.push({ isAdmin: isAdmin || false, email, status });
-      }
-    });
+        const userDocRef = doc(db, 'users', email) as DocumentReference<
+          TFirebaseUser,
+          TFirebaseUser
+        >;
+        const userDocSnap = await getDoc(userDocRef);
 
-    bet.users = users;
+        if (!userDocSnap.exists()) return null;
+
+        return {
+          isAdmin: isAdmin || false,
+          email,
+          pseudo: userDocSnap.data().pseudo,
+          status,
+          bet: parseParticipantBet({ genderUnknown, participant }),
+        };
+      }),
+    );
+
+    bet.participants = participants.reduce<TBetParticipant[]>((res, participant) => {
+      if (participant) res.push(participant);
+
+      return res;
+    }, []);
 
     return bet;
   }
